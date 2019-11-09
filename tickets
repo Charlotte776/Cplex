@@ -1,0 +1,35 @@
+from collections import defaultdict
+
+class Solution:
+
+    def findItinerary(self, tickets):
+        """
+        :type tickets: List[List[str]]
+        :rtype: List[str]
+        """
+
+        dic = defaultdict(list)
+        for k, v in tickets:
+            dic[k].append(v)
+            #print(dic[k])
+        for k, v in dic.items():
+            v.sort(reverse=True)
+        res = []
+        self.dfs(self, dic, "A", res)
+        return res[::-1]
+
+    def dfs(self, dic, start, res):
+        while dic[start]:
+            a = dic[start].pop()
+            #print(a)
+            self.dfs(self,dic, a, res)
+            #print(res)
+        #add from leaf point
+        res.append(start)
+
+#test
+tickets= [["A","B"],["B","A"],["A","D"],["D","A"],["D","F"],["F","D"]]
+p=Solution
+lst=p.findItinerary(p,tickets)
+print('\n')
+print(lst)
