@@ -8,24 +8,24 @@ class Solution:
         :rtype: List[str]
         """
 
-        endtrip = defaultdict(list)
+        paixu = defaultdict(list)
         for k, v in tickets:
-            endtrip[k].append(v)
+            paixu[k].append(v)
             #print(dic[k])
-        for k, v in endtrip.items():
+        for k, v in paixu.items():
             v.sort(reverse=True)
-        res = []
-        self.dfs(self, endtrip, "A", res)
-        return res[::-1]
+        endtrip = []
+        self.dfs(self, paixu, "A", endtrip)
+        return endtrip[::-1]
 
-    def dfs(self, endtrip, start, res):
-        while endtrip[start]:
-            a = endtrip[start].pop()
+    def dfs(self, paixu, start, endtrip):
+        while paixu[start]:
+            a = paixu[start].pop()
             #print(a)
-            self.dfs(self,endtrip, a, res)
+            self.dfs(self,paixu, a, endtrip)
             #print(res)
         #add from leaf point
-        res.append(start)
+        endtrip.append(start)
 
 #test
 tickets= [["A","Z"],["Z","A"],["A","D"],["D","A"],["D","F"],["F","D"]]
@@ -33,4 +33,5 @@ p=Solution
 lst=p.findItinerary(p,tickets)
 print('\n')
 print(lst)
+
 
