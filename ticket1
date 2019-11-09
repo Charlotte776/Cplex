@@ -1,7 +1,8 @@
 #END IN JFK IS NOT NECESSARY
-#DFS FROM START FIND END 
-#IF START != END : S_DU==-1 AND E_DU==-1  ELSE : ALL DU=i
-
+# S_DU==-1 AND E_DU==-1  ELSE : ALL DU=i
+#按照字母顺序遍历每一条路，这条路的路径放在trip中，最后一个点存放在endtrip中
+#当第一条路走完后如果还有多余的点，则对trip进行pop，pop的点存入endtrip中，直到能把剩余的点接到trip的后面
+#如果lenth==0&&trip[-1]==endtrip[0]路径能够接上，则结束循环
 class Solution:
 
     def findItinerary(self, tickets):
@@ -10,9 +11,8 @@ class Solution:
         :rtype: List[str]
         """
         #add point to trip or endtrip
-        trip = []
+        trip = ['A']
         endtrip = []
-        trip.append('A')
         cou=0
         #if trip link endtrip: link ==1
         link = 0
@@ -32,7 +32,7 @@ class Solution:
                             link = 1
                             continue
                     #choose smaller letter if have
-                    if choose >= tickets[i][1]:
+                    if choose > tickets[i][1]:
                         choose = tickets[i][1]
                         endm = i
             #find point du==-1            
