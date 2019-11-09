@@ -1,0 +1,56 @@
+#END IN JFK IS NOT NECESSARY
+#DFS FROM START FIND END 
+#IF START != END : S_DU==-1 AND E_DU==-1  ELSE : ALL DU=i
+
+class Solution:
+
+    def findItinerary(self, tickets):
+        """
+        :type tickets: List[List[str]]
+        :rtype: List[str]
+        """
+        #add point to trip or endtrip
+        trip = []
+        endtrip = []
+        trip.append('A')
+        cou=0
+        #if trip link endtrip: link ==1
+        link = 0
+        
+        while 1 :
+            if len(tickets) == 0:
+                break
+            #du
+            endm = -1  
+            start = trip[-1]
+            choose = "Z"
+            
+            for i in range(0,len(tickets)):
+                if tickets[i][0] == start:
+                    if len(endtrip) > 0:
+                        if tickets[i][1] == endtrip[0]:
+                            link = 1
+                            continue
+                    #choose smaller letter if have
+                    if choose >= tickets[i][1]:
+                        choose = tickets[i][1]
+                        endm = i
+            #find point du==-1            
+            if endm == -1:
+                if link == 1:
+                    break
+                endtrip.append(trip.pop())
+                continue
+            #find point du!=-1
+            trip.append(choose)
+            cou+=1
+            del tickets[endm]   
+        trip+=endtrip[::-1]
+        return trip
+    
+#test
+tickets= [["A","Z"],["Z","A"],["A","D"],["D","A"],["D","F"],["F","D"]]
+p=Solution
+lst=p.findItinerary(p,tickets)
+print('\n')
+print(lst)
