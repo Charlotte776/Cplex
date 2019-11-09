@@ -13,19 +13,24 @@ class Solution:
         :rtype: List[str]
         """
         #add point to trip or endtrip
-        trip = ['A']
+        trip = ['A']    #JFK
         endtrip = []
-        cou=0
+        #cou=0
         #if trip link endtrip: link ==1
         link = 0
-        
+
+        maxplane = tickets[0][1]
+        for j in range(0,len(tickets)):
+                if tickets[j][1]>maxplane:
+                    maxplane=tickets[j][1]
+            
         while 1 :
             if len(tickets) == 0:
                 break
             #du
             endm = -1  
             start = trip[-1]
-            choose = "Z"
+            smllet=maxplane
             
             for i in range(0,len(tickets)):
                 if tickets[i][0] == start:
@@ -33,9 +38,9 @@ class Solution:
                         if tickets[i][1] == endtrip[0]:
                             link = 1
                             continue
-                    #choose smaller letter if have
-                    if choose >= tickets[i][1]:
-                        choose = tickets[i][1]
+                    #hoose smaller letter if have
+                    if smllet >= tickets[i][1]:
+                        smllet = tickets[i][1]
                         endm = i
             #find point du==-1            
             if endm == -1:
@@ -44,8 +49,8 @@ class Solution:
                 endtrip.append(trip.pop())
                 continue
             #find point du!=-1
-            trip.append(choose)
-            cou+=1
+            trip.append(smllet)
+            #cou+=1
             del tickets[endm]   
         trip+=endtrip[::-1]
         return trip
