@@ -11,7 +11,7 @@ class Solution:
         paixu = defaultdict(list)
         for k, v in tickets:
             paixu[k].append(v)
-            #print(dic[k])
+            #print(paixu[k])
         for k, v in paixu.items():
             v.sort(reverse=True)
         endtrip = []
@@ -23,7 +23,7 @@ class Solution:
             a = paixu[start].pop()
             #print(a)
             self.dfs(self,paixu, a, endtrip)
-            #print(res)
+            #print(endtrip)
         #add from leaf point
         endtrip.append(start)
 
