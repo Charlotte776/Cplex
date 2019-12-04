@@ -26,7 +26,8 @@ public class Intbab {
 		Intbab q= new Intbab();
 		q.model1();//初始模型
 		double b=q.solve(res);//解取整数 
-		q.dfs(b,res,0);                       
+		q.dfs(b,res,0);       
+		System.out.println("+++++++++++++++++++++++++++++");
 		System.out.println("Result:obj="+nowIbest);
 		for(int i=0;i<nVar;i++) {
 			System.out.println("x"+i+"="+res[i]);
