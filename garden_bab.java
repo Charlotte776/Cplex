@@ -171,7 +171,7 @@ public class garden {
 
 	// 目前式子算出来的向下取整的z*,储存解的数组，层级。
 	public void dfs(double z, double[] store, int level) throws IloException {
-		// 剪枝，1)边界值>=Z*; 3）最优解是整数 2)不含可行解；顺序不能换
+		// 剪枝，1）无解的情况下返回double.min 2)边界值>=Z*; 3）最优解是整数 4)不含可行解；顺序不能换
 		int isint = isInt(store);
 		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + isint);
 		if (z < 1e-9) {
