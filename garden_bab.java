@@ -42,8 +42,9 @@ public class garden {
 	public void model1() throws FileNotFoundException {
 		try {
 			cplex = new IloCplex(); // creat a model
+			cplex.setOut(null);
 			// 会自动覆盖之前的内容
-			cplex.setOut(new PrintStream(new FileOutputStream("result.txt")));
+			//cplex.setOut(new PrintStream(new FileOutputStream("result.txt")));
 			// System.setOut(new PrintStream(new BufferedOutputStream(new
 			// FileOutputStream("debug.txt"))));
 			// System.setErr(new PrintStream(new BufferedOutputStream(new
