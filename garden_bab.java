@@ -174,7 +174,7 @@ public class garden {
 		// 剪枝，1)边界值>=Z*; 3）最优解是整数 2)不含可行解；顺序不能换
 		int isint = isInt(store);
 		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + isint);
-		if (z - (int) z < 1e-9) {
+		if (z < 1e-9) {
 			System.out.println("z-(int)z<1e-9\n");
 			return;
 		} else if (z >= nowIbest) {
