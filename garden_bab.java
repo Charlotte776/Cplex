@@ -132,7 +132,7 @@ public class garden {
 			return Double.MIN_VALUE;// 无可行解时返回
 		} catch (IloException e) {
 			System.err.println("Exception e: " + e);
-			return Integer.MIN_VALUE;
+			return Double.MIN_VALUE;
 		}
 	}
 
