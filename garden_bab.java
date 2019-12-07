@@ -1,21 +1,27 @@
 package usecplex;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 
 import ilog.concert.IloConstraint;
 import ilog.concert.IloException;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
+/*max 4x1-2x2+7x3-x4
+ * 
+ * x1       +5x3    <=10
+ * x1+  x2  -x3     <=1
+ *6x1  -5x2         <=0
+ *-x1       +2x3-2x4<=3
+ *     
+ * xj >=0 (j=1,2,3,4)
+ * xj are int(j=1,2,3)
+ */
 
-public class garden {
+public class Fund2 {
 	IloCplex cplex;
 	IloNumVar[] x;
 	static int nVar = 20;// 变量数量
@@ -23,31 +29,23 @@ public class garden {
 	static double nowIbest = Double.MAX_VALUE;// 目前最优的整数解
 
 	public static void main(String[] args) throws IloException, FileNotFoundException {
-		long startTime = System.currentTimeMillis(); // 获取开始时间
-		garden q = new garden();
+		Fund2 q = new Fund2();
 		q.model1();// 初始模型
 		double b = q.solve(res);// 解取整数
 		q.dfs(b, res, 0);
-		System.out.println(Double.MIN_VALUE);
 		System.out.println("Result:obj=" + nowIbest);
 		for (int i = 0; i < nVar; i++) {
 			System.out.println("x" + (i + 1) + "=" + res[i]);
 		}
-		long endTime = System.currentTimeMillis(); // 获取结束时间
-
-		System.out.println("程序运行时间：" + (endTime - startTime) + "ms"); // 输出程序运行时间
 	}
 
-	// 初始模型
 	public void model1() throws FileNotFoundException {
 		try {
 			cplex = new IloCplex(); // creat a model
 			// 会自动覆盖之前的内容
 			cplex.setOut(new PrintStream(new FileOutputStream("result.txt")));
-			// System.setOut(new PrintStream(new BufferedOutputStream(new
-			// FileOutputStream("debug.txt"))));
-			// System.setErr(new PrintStream(new BufferedOutputStream(new
-			// FileOutputStream("error.txt"))));
+			 System.setOut(new PrintStream(new BufferedOutputStream(new
+			 FileOutputStream("debug.txt"))));
 			double[] lb = new double[nVar];
 			double[] ub = new double[nVar];
 			for (int t = 0; t < nVar; t++) {
@@ -117,6 +115,7 @@ public class garden {
 		}
 	}
 
+
 	// 得到目前的最优解
 	public double solve(double[] res2) {
 		try {
@@ -128,7 +127,7 @@ public class garden {
 				System.out.println("obj=" + cplex.getObjValue() + "\n");
 				return cplex.getObjValue();
 			}
-			System.out.println("infeasible result!");
+			System.out.println("infeasible!\n");
 			return Double.MAX_VALUE;// 无可行解时返回
 		} catch (IloException e) {
 			System.err.println("Exception e: " + e);
@@ -171,49 +170,52 @@ public class garden {
 
 	// 目前式子算出来的向下取整的z*,储存解的数组，层级。
 	public void dfs(double z, double[] store, int level) throws IloException {
-		// 剪枝，1)边界值>=Z*; 3）最优解是整数
-		int numisnotint = isInt(store);
-		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + numisnotint);
-		if (z >= nowIbest*0.9999) {
-			System.out.println("z>= nowIbest*0.9999\n");
+		// 剪枝，1)边界值<=Z*; 3）最优解是整数 2)不含可行解；顺序不能换
+		int isint = isInt(store);
+		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + isint);
+		if (z>= nowIbest*0.999999) {
+			System.out.println("z>=nowIbest0.999999\n");
 			return;
-		} else if (numisnotint == -1 && z < nowIbest*0.9999) {
-			System.out.println("isint==-1&&z<nowIbest*0.9999\n");
+		} else if (isint == -1 && z < nowIbest*0.999999) {
+			System.out.println("isint==-1&&z<nowIbest*0.999999\n");
 			nowIbest = z;
 			for (int i = 0; i < nVar; i++) {
 				res[i] = store[i];
 			}
 			System.out.println("*" + nowIbest + "*");
 			return;
+		} else if (level >= nVar - 1) {
+			System.out.println("level>=nVar\n");
+			return;
 		} else {
 			// 分支，先遍历左子树，再遍历右子树
 			double[] leftVar = new double[nVar];
 			double[] rightVar = new double[nVar];
-			IloConstraint addleftCons = addCons(numisnotint, store[numisnotint], 0);
+			IloConstraint addleftCons = addCons(isint, store[isint], 0);
 			System.out.println("left");
 			double leftres = solve(leftVar);
 			cplex.exportModel(level + ".1.lp");
 			delCons(addleftCons);
-			IloConstraint addrightcons = addCons(numisnotint, store[numisnotint], 1);
+			IloConstraint addrightcons = addCons(isint, store[isint], 1);
 			System.out.println("right");
 			double rightres = solve(rightVar);
 			cplex.exportModel(level + ".2.lp");
 			delCons(addrightcons);
 			// 贪心 ,每一层都要走遍左右两个节点
-			if (leftres <= rightres) {
+			if (leftres >= rightres) {
 				// 先左后右
-				addleftCons = addCons(numisnotint, store[numisnotint], 0);
+				addleftCons = addCons(isint, store[isint], 0);
 				dfs(leftres, leftVar, level + 1);
 				delCons(addleftCons);
-				addrightcons = addCons(numisnotint, store[numisnotint], 1);
+				addrightcons = addCons(isint, store[isint], 1);
 				dfs(rightres, rightVar, level + 1);
 				delCons(addrightcons);
 			} else {
 				// 先右后左
-				addrightcons = addCons(numisnotint, store[numisnotint], 1);
+				addrightcons = addCons(isint, store[isint], 1);
 				dfs(rightres, rightVar, level + 1);
 				delCons(addrightcons);
-				addleftCons = addCons(numisnotint, store[numisnotint], 0);
+				addleftCons = addCons(isint, store[isint], 0);
 				dfs(leftres, leftVar, level + 1);
 				delCons(addleftCons);
 			}
