@@ -128,10 +128,11 @@ public class garden {
 				System.out.println("obj=" + cplex.getObjValue() + "\n");
 				return cplex.getObjValue();
 			}
+			System.out.println("infeasible result!");
 			return Double.MAX_VALUE;// 无可行解时返回
 		} catch (IloException e) {
 			System.err.println("Exception e: " + e);
-			return Integer.MAX_VALUE;
+			return Double.MAX_VALUE;
 		}
 	}
 
@@ -170,33 +171,30 @@ public class garden {
 
 	// 目前式子算出来的向下取整的z*,储存解的数组，层级。
 	public void dfs(double z, double[] store, int level) throws IloException {
-		// 剪枝，1)边界值>=Z*; 3）最优解是整数 2)不含可行解；顺序不能换
-		int isint = isInt(store);
-		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + isint);
-		if (z >= nowIbest) {
-			System.out.println("z>=nowIbest\n");
+		// 剪枝，1)边界值>=Z*; 3）最优解是整数
+		int numisnotint = isInt(store);
+		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + numisnotint);
+		if (z >= nowIbest*0.9999) {
+			System.out.println("z>= nowIbest*0.9999\n");
 			return;
-		} else if (isint == -1 && z < nowIbest) {
-			System.out.println("isint==-1&&z<nowIbest\n");
+		} else if (numisnotint == -1 && z < nowIbest*0.9999) {
+			System.out.println("isint==-1&&z<nowIbest*0.9999\n");
 			nowIbest = z;
 			for (int i = 0; i < nVar; i++) {
 				res[i] = store[i];
 			}
 			System.out.println("*" + nowIbest + "*");
 			return;
-		} else if (level >= nVar) {
-			System.out.println("level>=nVar\n");
-			return;
 		} else {
 			// 分支，先遍历左子树，再遍历右子树
 			double[] leftVar = new double[nVar];
 			double[] rightVar = new double[nVar];
-			IloConstraint addleftCons = addCons(isint, store[isint], 0);
+			IloConstraint addleftCons = addCons(numisnotint, store[numisnotint], 0);
 			System.out.println("left");
 			double leftres = solve(leftVar);
 			cplex.exportModel(level + ".1.lp");
 			delCons(addleftCons);
-			IloConstraint addrightcons = addCons(isint, store[isint], 1);
+			IloConstraint addrightcons = addCons(numisnotint, store[numisnotint], 1);
 			System.out.println("right");
 			double rightres = solve(rightVar);
 			cplex.exportModel(level + ".2.lp");
@@ -204,18 +202,18 @@ public class garden {
 			// 贪心 ,每一层都要走遍左右两个节点
 			if (leftres <= rightres) {
 				// 先左后右
-				addleftCons = addCons(isint, store[isint], 0);
+				addleftCons = addCons(numisnotint, store[numisnotint], 0);
 				dfs(leftres, leftVar, level + 1);
 				delCons(addleftCons);
-				addrightcons = addCons(isint, store[isint], 1);
+				addrightcons = addCons(numisnotint, store[numisnotint], 1);
 				dfs(rightres, rightVar, level + 1);
 				delCons(addrightcons);
 			} else {
 				// 先右后左
-				addrightcons = addCons(isint, store[isint], 1);
+				addrightcons = addCons(numisnotint, store[numisnotint], 1);
 				dfs(rightres, rightVar, level + 1);
 				delCons(addrightcons);
-				addleftCons = addCons(isint, store[isint], 0);
+				addleftCons = addCons(numisnotint, store[numisnotint], 0);
 				dfs(leftres, leftVar, level + 1);
 				delCons(addleftCons);
 			}
