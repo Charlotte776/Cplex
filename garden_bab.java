@@ -1,4 +1,4 @@
-package usecplex;
+package aaa;
 
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
@@ -10,16 +10,6 @@ import ilog.concert.IloException;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
-/*max 4x1-2x2+7x3-x4
- * 
- * x1       +5x3    <=10
- * x1+  x2  -x3     <=1
- *6x1  -5x2         <=0
- *-x1       +2x3-2x4<=3
- *     
- * xj >=0 (j=1,2,3,4)
- * xj are int(j=1,2,3)
- */
 
 public class Fund2 {
 	IloCplex cplex;
@@ -43,14 +33,14 @@ public class Fund2 {
 		try {
 			cplex = new IloCplex(); // creat a model
 			// 会自动覆盖之前的内容
-			cplex.setOut(new PrintStream(new FileOutputStream("result.txt")));
-			 System.setOut(new PrintStream(new BufferedOutputStream(new
-			 FileOutputStream("debug.txt"))));
+			cplex.setOut(null);
+//			 System.setOut(new PrintStream(new BufferedOutputStream(new
+//			 FileOutputStream("debug.txt"))));
 			double[] lb = new double[nVar];
 			double[] ub = new double[nVar];
 			for (int t = 0; t < nVar; t++) {
 				lb[t] = 0;
-				ub[t] = Integer.MAX_VALUE;
+				ub[t] = Double.MAX_VALUE;
 			}
 			x = cplex.numVarArray(nVar, lb, ub);// （变量个数，下界，上界）
 
@@ -152,7 +142,7 @@ public class Fund2 {
 	}
 
 	// 判断是不是均为小数,int直接是去掉小数部分
-	public int isInt(double[] temp) {
+	public int firstxbisnotInt(double[] temp) {
 		for (int i = 0; i < temp.length - 1; i++) {
 			if (temp[i] >= 0) {
 				if ((temp[i] - (int) temp[i] < 1e-9) || ((int) temp[i] + 1 - temp[i]) < 1e-9)
@@ -171,32 +161,32 @@ public class Fund2 {
 	// 目前式子算出来的向下取整的z*,储存解的数组，层级。
 	public void dfs(double z, double[] store, int level) throws IloException {
 		// 剪枝，1)边界值<=Z*; 3）最优解是整数 2)不含可行解；顺序不能换
-		int isint = isInt(store);
-		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " isint=" + isint);
+		int firstxbisntInt = firstxbisnotInt(store);
+		System.out.println("\n\nlevel=" + level + " z=" + z + " nowIbest=" + nowIbest + " xbnotint=" + firstxbisntInt);
+		//0.9999不可取，会陷入循环。1）x15取偏大是最优解，导致x19减小1/3；
+		//2)x19取偏小是最优解，导致x15增加2/3；
+		//1)2)解相同,x15不断增加，x19不断减小，但解没有改善，栈会溢出
 		if (z>= nowIbest*0.999999) {
-			System.out.println("z>=nowIbest0.999999\n");
+			System.out.println("z>=nowIbest*0.999999\n");
 			return;
-		} else if (isint == -1 && z < nowIbest*0.999999) {
-			System.out.println("isint==-1&&z<nowIbest*0.999999\n");
+		} else if (firstxbisntInt == -1 ) {
+			System.out.println("firstxbisntInt == -1\n");
 			nowIbest = z;
 			for (int i = 0; i < nVar; i++) {
 				res[i] = store[i];
 			}
-			System.out.println("*" + nowIbest + "*");
+			System.out.println("@" + nowIbest + "@");
 			return;
-		} else if (level >= nVar - 1) {
-			System.out.println("level>=nVar\n");
-			return;
-		} else {
+		}else {
 			// 分支，先遍历左子树，再遍历右子树
 			double[] leftVar = new double[nVar];
 			double[] rightVar = new double[nVar];
-			IloConstraint addleftCons = addCons(isint, store[isint], 0);
+			IloConstraint addleftCons = addCons(firstxbisntInt, store[firstxbisntInt], 0);
 			System.out.println("left");
 			double leftres = solve(leftVar);
 			cplex.exportModel(level + ".1.lp");
 			delCons(addleftCons);
-			IloConstraint addrightcons = addCons(isint, store[isint], 1);
+			IloConstraint addrightcons = addCons(firstxbisntInt, store[firstxbisntInt], 1);
 			System.out.println("right");
 			double rightres = solve(rightVar);
 			cplex.exportModel(level + ".2.lp");
@@ -204,18 +194,18 @@ public class Fund2 {
 			// 贪心 ,每一层都要走遍左右两个节点
 			if (leftres >= rightres) {
 				// 先左后右
-				addleftCons = addCons(isint, store[isint], 0);
+				addleftCons = addCons(firstxbisntInt, store[firstxbisntInt], 0);
 				dfs(leftres, leftVar, level + 1);
 				delCons(addleftCons);
-				addrightcons = addCons(isint, store[isint], 1);
+				addrightcons = addCons(firstxbisntInt, store[firstxbisntInt], 1);
 				dfs(rightres, rightVar, level + 1);
 				delCons(addrightcons);
 			} else {
 				// 先右后左
-				addrightcons = addCons(isint, store[isint], 1);
+				addrightcons = addCons(firstxbisntInt, store[firstxbisntInt], 1);
 				dfs(rightres, rightVar, level + 1);
 				delCons(addrightcons);
-				addleftCons = addCons(isint, store[isint], 0);
+				addleftCons = addCons(firstxbisntInt, store[firstxbisntInt], 0);
 				dfs(leftres, leftVar, level + 1);
 				delCons(addleftCons);
 			}
