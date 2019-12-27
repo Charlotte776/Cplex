@@ -64,4 +64,37 @@ public class cutmodel1 {
 				lin.clear();
 			}
 
-		} ca
+		} catch (IloException e) {
+			System.err.println("Concert exception caught: " + e);
+		}
+	}
+
+	// 函数功能：求解，输出公式和结果
+	public void solve() {
+		try {
+			if (cplex.solve()) {
+				cplex.output().println("Solution status = " + cplex.getStatus());
+				System.out.println("obj=" + cplex.getObjValue() + "\n");
+			}
+		} catch (IloException e) {
+			System.err.println("Exception e: " + e);
+		}
+	}
+
+	// 函数功能：输出题目数据
+	public void showData() {
+		System.out.println("roll width=" + rollWidth);
+		System.out.println("demand size:");
+		for (int i = 0; i < size.length; i++) {
+			System.out.print(size[i] + " ");
+		}
+		System.out.println();
+		System.out.println("size amount:");
+		for (int i = 0; i < amount.length; i++) {
+			System.out.print(amount[i] + " ");
+		}
+		System.out.println();
+	}
+
+}
+
